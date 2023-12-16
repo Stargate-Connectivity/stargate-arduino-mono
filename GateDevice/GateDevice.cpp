@@ -19,22 +19,12 @@
 
 #include "GateDevice.h"
 
-GateDevice::GateDevice() {
-    this->deviceStarted = false;
-    this->deviceName = "";
+GateDevice::GateDevice() : BaseDevice() {
     this->connectionState = 0;
     this->pingInterval = 1000;
     this->pingTimer = 0;
     this->pingInProgress = false;
     this->failedPings = 0;
-    this->outputBuffer.sendFunction = std::bind(&GateDevice::send, this, std::placeholders::_1);
-    this->factory.outputBuffer = &this->outputBuffer;
-};
-
-void GateDevice::setName(String name) {
-    if (!this->deviceStarted) {
-        this->deviceName = name;
-    }
 };
 
 void GateDevice::start() {

@@ -6,6 +6,11 @@
 class GateValue
 {
     public:
+        #ifdef __AVR__
+            typedef void (*RemoteChangeCallback)();
+        #else
+            typedef std::function<void()> RemoteChangeCallback;
+        #endif
         GateValue();
         int id;
         String valueName;
@@ -15,7 +20,7 @@ class GateValue
         virtual void fromRemote(String textValue) = 0;
         virtual String toManifest() = 0;
         static int getDirection(String directionString);
-        std::function<void()> onRemoteChange;
+        RemoteChangeCallback onRemoteChange;
         void setName(String valueName);
 
     protected:

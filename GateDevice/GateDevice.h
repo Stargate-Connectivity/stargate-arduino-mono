@@ -21,21 +21,20 @@
 #define GateDevice_h
 
 #include <Arduino.h>
-#include "OutputBuffer.h"
-#include "MessageHandler.h"
-#include "lib/values/ValueFactory.h"
+#include "../GateCore/BaseDevice.h"
+#include "../GateCore/OutputBuffer.h"
+#include "../GateCore/MessageHandler.h"
+#include "../GateCore/values/ValueFactory.h"
 
-class GateDevice
+class GateDevice : public BaseDevice
 {
     public:
         GateDevice();
-        void setName(String name);
-        void start();
-        void loop();
-        bool isReady();
+        void start() override;
+        void loop() override;
+        bool isReady() override;
         void usePing();
         int connectionState;
-        ValueFactory factory;
 
     protected:
         virtual bool startUdp(int port) = 0;
@@ -47,16 +46,12 @@ class GateDevice
         virtual void startSocket(String serverIp, int port) = 0;
         virtual void stopSocket() = 0;
         virtual void loopSocket() = 0;
-        virtual void send(String message) = 0;
 
         void socketOpened();
         void socketClosed();
         void onMessage(char* message);
 
     private:
-        OutputBuffer outputBuffer;
-        bool deviceStarted;
-        String deviceName;
         void connectServer();
         void handlePing();
         int pingInterval;

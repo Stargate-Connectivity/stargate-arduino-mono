@@ -2,8 +2,9 @@
 #define OutputBuffer_h
 
 #include <Arduino.h>
-#include <map>
+#include "Sender.h"
 #include "values/GateValue.h"
+#include "utils/GateValuesSet.h"
 
 class OutputBuffer
 {
@@ -11,10 +12,10 @@ class OutputBuffer
         void loop();
         void sendValue(GateValue* value);
         void clear();
-        std::function<void(String message)> sendFunction;
+        Sender* device;
 
     private:
-        std::map<int, GateValue*> buffer;
+        GateValuesSet buffer;
 };
 
 #endif

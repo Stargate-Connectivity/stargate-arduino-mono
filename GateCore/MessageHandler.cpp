@@ -1,7 +1,7 @@
 #include "MessageHandler.h"
 
-std::list<String> parseArray(String array) {
-    std::list<String> params;
+GateList<String> parseArray(String array) {
+    GateList<String> params;
     int separatorIndex = array.indexOf('|');
     String lengths = array.substring(0, separatorIndex);
     String values = array.substring(separatorIndex + 1);
@@ -10,11 +10,11 @@ std::list<String> parseArray(String array) {
     while(true) {
         nextValueIndex = lengths.indexOf(',');
         if (nextValueIndex == -1) {
-            params.push_back(values);
+            params.push(values);
             break;
         } else {
             valueLength = lengths.substring(0, nextValueIndex).toInt();
-            params.push_back(values.substring(0, valueLength));
+            params.push(values.substring(0, valueLength));
             lengths = lengths.substring(nextValueIndex + 1);
             values = values.substring(valueLength);
         }
@@ -22,10 +22,14 @@ std::list<String> parseArray(String array) {
     return params;
 }
 
-String createManifest(String deviceName, std::map<int, GateValue*> valuesMap) {
+String createManifest(String deviceName, GateValuesSet* valuesSet) {
     String manifest("{");
-    EEPROM.begin(40);
-    delay(10);
+    #ifdef __AVR__
+        EEPROM.begin();
+    #else
+        EEPROM.begin(40);
+        delay(10);
+    #endif
     if (EEPROM.read(0) == 0xFF) {
         String id("");
         byte currentByte;
@@ -43,8 +47,8 @@ String createManifest(String deviceName, std::map<int, GateValue*> valuesMap) {
     }
     EEPROM.end();
     manifest += "\"deviceName\":\"" + deviceName + "\", \"values\":[";
-    for (auto valueEntry : valuesMap) {
-        manifest += valueEntry.second->toManifest() + ",";
+    for (int i = 0; i < valuesSet->size(); i++) {
+        manifest += valuesSet->get(i)->toManifest() + ",";
     }
     manifest.remove(manifest.length() - 1);
     manifest += "]}";
@@ -58,8 +62,12 @@ void handleIdAssigned(String idAssignedMessage) {
     int bufferSize = id.length() + 1;
     byte *buffer = new byte[bufferSize];
     id.getBytes(buffer, bufferSize);
-    EEPROM.begin(40);
-    delay(10);
+    #ifdef __AVR__
+        EEPROM.begin();
+    #else
+        EEPROM.begin(40);
+        delay(10);
+    #endif
     EEPROM.write(0, 0xFF);
     for(int i = 0; i < bufferSize; i++) {
         EEPROM.write(i + 1, buffer[i]);
@@ -67,55 +75,48 @@ void handleIdAssigned(String idAssignedMessage) {
     EEPROM.end();
 }
 
-void handleValueMessage(String message, std::map<int, GateValue*> valuesMap) {
-    std::map<int, String> messageMap;
+void handleValueMessage(String message, GateValuesSet* valuesSet) {
     int separatorIndex = message.indexOf('|');
     if (separatorIndex != -1) {
         String ids = message.substring(0, separatorIndex);
         String values = message.substring(separatorIndex + 1);
-        std::list<int> idsList;
+        GateList<int> idsList;
         int nextIdIndex = 0;
         while(true) {
             nextIdIndex = ids.indexOf(',');
             if (nextIdIndex == -1) {
-                idsList.push_back(ids.toInt());
+                idsList.push(ids.toInt());
                 break;
             } else {
-                idsList.push_back(ids.substring(0, nextIdIndex).toInt());
+                idsList.push(ids.substring(0, nextIdIndex).toInt());
                 ids = ids.substring(nextIdIndex + 1);
             }
         }
-        std::list<String> valuesList = parseArray(values);
-        if (idsList.size() == valuesList.size()) {
-            auto idsIterator = idsList.begin();
-            auto valuesIterator = valuesList.begin();
+        GateList<String> valuesList = parseArray(values);
+        if ((idsList.size() > 0) && (idsList.size() == valuesList.size())) {
             for (int i = 0; i < idsList.size(); i++) {
-                auto entry = valuesMap.find(*idsIterator);
-                if (entry == valuesMap.end()) {
-                    continue;
-                } else if (entry->second->direction == 1) {
-                    entry->second->fromRemote(*valuesIterator);
+                int valueIndex = valuesSet->find(idsList.get(i));
+                if (valueIndex > -1) {
+                    if (valuesSet->get(valueIndex)->direction == 1) {
+                        valuesSet->get(valueIndex)->fromRemote(valuesList.get(i));
+                    }
                 }
-                std::advance(idsIterator, 1);
-                std::advance(valuesIterator, 1);
             }
         }
     }
 }
 
-void handleSubscription(bool subscribed, String message, std::map<int, GateValue*> valuesMap, OutputBuffer* outputBuffer) {
+void handleSubscription(bool subscribed, String message, GateValuesSet* valuesSet, OutputBuffer* outputBuffer) {
     int separatorIndex = message.indexOf('|');
     if (separatorIndex != -1) {
         String idsString = message.substring(separatorIndex + 1);
-        auto ids = parseArray(idsString);
-        for (auto id : ids) {
-            auto entry = valuesMap.find(id.toInt());
-            if (entry == valuesMap.end()) {
-                continue;
-            } else {
-                entry->second->subscribed = subscribed;
+        GateList<String> ids = parseArray(idsString);
+        for (int i = 0; i < ids.size(); i++) {
+            int valueIndex = valuesSet->find(ids.get(i).toInt());
+            if (valueIndex > -1) {
+                valuesSet->get(valueIndex)->subscribed = subscribed;
                 if (subscribed) {
-                    outputBuffer->sendValue(entry->second);
+                    outputBuffer->sendValue(valuesSet->get(valueIndex));
                 }
             }
         }

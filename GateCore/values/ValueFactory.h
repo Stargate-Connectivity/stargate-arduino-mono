@@ -2,13 +2,13 @@
 #define ValueFactory_h
 
 #include <Arduino.h>
-#include <map>
 #include "GateValue.h"
 #include "GateBool.h"
 #include "GateInt.h"
 #include "GateFloat.h"
 #include "GateString.h"
 #include "../OutputBuffer.h"
+#include "../utils/GateValuesSet.h"
 
 class ValueFactory
 {
@@ -17,12 +17,12 @@ class ValueFactory
         GateInt createInt(String direction);
         GateFloat createFloat(String direction);
         GateString createString(String direction);
-        std::map<int, GateValue*> getValues();
+        GateValuesSet* getValues();
         void addValue(GateValue* gateValue);
         OutputBuffer* outputBuffer;
 
     private:
-        std::map<int, GateValue*> valuesMap;
+        GateValuesSet valuesSet;
 };
 
 #endif
