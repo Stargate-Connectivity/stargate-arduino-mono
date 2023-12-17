@@ -25,14 +25,14 @@ SerialGateDevice::SerialGateDevice() : BaseDevice() {
 
 void SerialGateDevice::send(String message) {
     if (Serial) {
-        Serial.print(message);
+        Serial.println(message);
     }
 }
 
 void SerialGateDevice::start() {
     if (!this->deviceStarted) {
         this->deviceStarted = true;
-        Serial.setTimeout(5);
+        Serial.setTimeout(100);
         Serial.begin(115200);
     }
 }
@@ -42,7 +42,7 @@ void SerialGateDevice::loop() {
         this->outputBuffer.loop();
     }
     if (Serial.available() > 0) {
-        String message = Serial.readString();
+        String message = Serial.readStringUntil('\n');
         this->onMessage(message);
     }
 }

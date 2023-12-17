@@ -15,6 +15,9 @@ GateList<String> parseArray(String array) {
                 break;
             } else {
                 valueLength = lengths.substring(0, nextValueIndex).toInt();
+                if (valueLength > values.length()) {
+                    return GateList<String>();
+                }
                 params.push(values.substring(0, valueLength));
                 lengths = lengths.substring(nextValueIndex + 1);
                 values = values.substring(valueLength);
