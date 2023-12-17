@@ -3,20 +3,22 @@
 GateList<String> parseArray(String array) {
     GateList<String> params;
     int separatorIndex = array.indexOf('|');
-    String lengths = array.substring(0, separatorIndex);
-    String values = array.substring(separatorIndex + 1);
-    int nextValueIndex;
-    int valueLength;
-    while(true) {
-        nextValueIndex = lengths.indexOf(',');
-        if (nextValueIndex == -1) {
-            params.push(values);
-            break;
-        } else {
-            valueLength = lengths.substring(0, nextValueIndex).toInt();
-            params.push(values.substring(0, valueLength));
-            lengths = lengths.substring(nextValueIndex + 1);
-            values = values.substring(valueLength);
+    if (separatorIndex != -1) {
+        String lengths = array.substring(0, separatorIndex);
+        String values = array.substring(separatorIndex + 1);
+        int nextValueIndex;
+        int valueLength;
+        while(true) {
+            nextValueIndex = lengths.indexOf(',');
+            if (nextValueIndex == -1) {
+                params.push(values);
+                break;
+            } else {
+                valueLength = lengths.substring(0, nextValueIndex).toInt();
+                params.push(values.substring(0, valueLength));
+                lengths = lengths.substring(nextValueIndex + 1);
+                values = values.substring(valueLength);
+            }
         }
     }
     return params;
@@ -34,23 +36,35 @@ String createManifest(String deviceName, GateValuesSet* valuesSet) {
         String id("");
         byte currentByte;
         int currentIndex = 1;
+        bool success = true;
         while(true) {
             currentByte = EEPROM.read(currentIndex);
             if (currentByte == 0) {
                 break;
             } else {
                 currentIndex++;
-                id += (char) currentByte;
+                if (isAscii((char) currentByte)) {
+                    id += (char) currentByte;
+                } else {
+                    success = false;
+                    break;
+                }
             }
         }
-        manifest += "\"id\":\"" + id + "\", ";
+        if (success) {
+            manifest += "\"id\":\"" + id + "\", ";
+        } else {
+            EEPROM.write(0, 0);
+        }
     }
     EEPROM.end();
     manifest += "\"deviceName\":\"" + deviceName + "\", \"values\":[";
-    for (int i = 0; i < valuesSet->size(); i++) {
-        manifest += valuesSet->get(i)->toManifest() + ",";
+    if (valuesSet->size() > 0) {
+        for (int i = 0; i < valuesSet->size(); i++) {
+            manifest += valuesSet->get(i)->toManifest() + ",";
+        }
+        manifest.remove(manifest.length() - 1);
     }
-    manifest.remove(manifest.length() - 1);
     manifest += "]}";
     return manifest;
 }
@@ -76,6 +90,7 @@ void handleIdAssigned(String idAssignedMessage) {
 }
 
 void handleValueMessage(String message, GateValuesSet* valuesSet) {
+    message.trim();
     int separatorIndex = message.indexOf('|');
     if (separatorIndex != -1) {
         String ids = message.substring(0, separatorIndex);
