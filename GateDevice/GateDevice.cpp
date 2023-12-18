@@ -117,8 +117,13 @@ void GateDevice::onMessage(char* message) {
             if (message[1] == '?') {
                 message[1] = '>';
                 String response = strcat(message, "|");
-                response += createManifest(this->deviceName, this->factory.getValues());
-                this->send(response);
+                if (message[2] == 'm') {
+                    response += createManifest(this->deviceName, this->factory.getValues());
+                    this->send(response);
+                } else if (message[2] == 't') {
+                    response += "device";
+                    this->send(response);
+                }
             } else if (message[1] == '!') {
                 if (message[2] == 'a') {
                     handleIdAssigned(String(message));
