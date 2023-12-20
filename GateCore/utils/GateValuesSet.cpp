@@ -48,6 +48,8 @@ GateValue* GateValuesSet::get(int index) {
 }
 
 void GateValuesSet::clear() {
-    delete[] this->values;
-    this->length = 0;
+    if (this->length > 0) {
+        delete[] this->values;
+        this->length = 0;
+    }
 }
