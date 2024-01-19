@@ -35,11 +35,13 @@ class GateDevice : public BaseDevice
         bool isReady() override;
         void usePing();
         int connectionState;
+        String discoveryKeyword;
+        int discoveryPort;
 
     protected:
         virtual bool startUdp(int port) = 0;
         virtual void stopUdp() = 0;
-        virtual bool wasKeywordReceived(char* keyword) = 0;
+        virtual String getUdpMessage() = 0;
         virtual String getServerIp() = 0;
         virtual void onDeviceStart() = 0;
         virtual bool networkAvailable() = 0;

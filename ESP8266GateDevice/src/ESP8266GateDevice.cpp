@@ -25,21 +25,21 @@ ESP8266GateDevice::ESP8266GateDevice(String ssid, String password) : GateDevice(
 };
 
 bool ESP8266GateDevice::startUdp(int port) {
-    return this->UDP.begin(10001) == 1;
+    return this->UDP.begin(port) == 1;
 }
 
 void ESP8266GateDevice::stopUdp() {
     this->UDP.stop();
 }
 
-bool ESP8266GateDevice::wasKeywordReceived(char* keyword) {
+String ESP8266GateDevice::getUdpMessage() {
     int packetSize = this->UDP.parsePacket();
     if (packetSize > 0) {
         char data[packetSize];
         this->UDP.read(data, packetSize);
-        return strcmp(data, keyword);
+        return String(data);
     } else {
-        return false;
+        return String("");
     }
 }
 

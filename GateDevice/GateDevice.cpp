@@ -25,6 +25,8 @@ GateDevice::GateDevice() : BaseDevice() {
     this->pingTimer = 0;
     this->pingInProgress = false;
     this->failedPings = 0;
+    this->discoveryKeyword = "GateServer";
+    this->discoveryPort = 10001;
 };
 
 void GateDevice::start() {
@@ -54,7 +56,7 @@ void GateDevice::connectServer() {
         case 0:
         {
             this->stopSocket();
-            bool success = this->startUdp(10001);
+            bool success = this->startUdp(this->discoveryPort);
             if (success) {
                 this->connectionState = 1;
             }
@@ -62,12 +64,20 @@ void GateDevice::connectServer() {
         }
         case 1:
         {
-            if (this->wasKeywordReceived((char*) "GateServer")) {
-                String serverIp = this->getServerIp();
-                this->stopUdp();
-                this->startSocket(serverIp, 10003);
-                this->pingTimer = millis() + 5000;
-                this->connectionState = 2;
+            String discoveryMessage = this->getUdpMessage();
+            if (discoveryMessage.length() > this->discoveryKeyword.length()) {
+                int separatorIndex = discoveryMessage.indexOf(':');
+                if (separatorIndex > -1) {
+                    String keyword = discoveryMessage.substring(0, separatorIndex);
+                    if (keyword.equals(discoveryKeyword)) {
+                        String serverIp = this->getServerIp();
+                        this->stopUdp();
+                        int connectionPort = discoveryMessage.substring(separatorIndex + 1).toInt();
+                        this->startSocket(serverIp, connectionPort);
+                        this->pingTimer = millis() + 5000;
+                        this->connectionState = 2;
+                    }
+                }
             }
             break;
         }

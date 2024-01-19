@@ -34,7 +34,7 @@ class ESP8266GateDevice : public GateDevice
     private:
         bool startUdp(int port) override;
         void stopUdp() override;
-        bool wasKeywordReceived(char* keyword) override;
+        String getUdpMessage() override;
         String getServerIp() override;
         void onDeviceStart() override;
         bool networkAvailable() override;
