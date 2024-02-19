@@ -5,21 +5,26 @@
 #include "Sender.h"
 #include "OutputBuffer.h"
 #include "values/ValueFactory.h"
+#include "ServerStorage.h"
 
 class BaseDevice : public Sender
 {
     public:
         BaseDevice();
         void setName(String name);
+        void setGroup(String name);
         virtual void start() = 0;
+//        virtual void stop() = 0;
         virtual void loop() = 0;
         virtual bool isReady() = 0;
         ValueFactory factory;
+        ServerStorage serverStorage;
 
     protected:
         OutputBuffer outputBuffer;
         bool deviceStarted;
         String deviceName;
+        String groupName;
 };
 
 #endif

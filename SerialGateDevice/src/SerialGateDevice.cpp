@@ -82,6 +82,8 @@ void SerialGateDevice::onMessage(String message) {
                 response += "device";
                 this->send(response);
             }
+        } else if (message.charAt(1) == '>') {
+            this->serverStorage.handleGetResponse(message);
         }
     } else {
         handleValueMessage(String(message), this->factory.getValues());

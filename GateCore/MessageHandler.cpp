@@ -27,7 +27,7 @@ GateList<String> parseArray(String array) {
     return params;
 }
 
-String createManifest(String deviceName, GateValuesSet* valuesSet) {
+String createManifest(String deviceName, String deviceGroup, GateValuesSet* valuesSet) {
     String manifest("{");
     #ifdef __AVR__
         EEPROM.begin();
@@ -61,7 +61,11 @@ String createManifest(String deviceName, GateValuesSet* valuesSet) {
         }
     }
     EEPROM.end();
-    manifest += "\"deviceName\":\"" + deviceName + "\", \"values\":[";
+    manifest += "\"deviceName\":\"" + deviceName + "\"";
+    if (deviceGroup.length() > 0) {
+        manifest += ", \"group\":\"" + deviceGroup + "\"";
+    }
+    manifest += ", \"values\":[";
     if (valuesSet->size() > 0) {
         for (int i = 0; i < valuesSet->size(); i++) {
             manifest += valuesSet->get(i)->toManifest() + ",";

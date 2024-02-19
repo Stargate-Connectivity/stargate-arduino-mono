@@ -10,7 +10,7 @@
 
 GateList<String> parseArray(String array);
 void handleValueMessage(String message, GateValuesSet* valuesSet);
-String createManifest(String deviceName, GateValuesSet* valuesSet);
+String createManifest(String deviceName, String deviceGroup, GateValuesSet* valuesSet);
 void handleIdAssigned(String idAssignedMessage);
 void handleSubscription(bool subscribed, String message, GateValuesSet* valuesSet, OutputBuffer* outputBuffer);
 

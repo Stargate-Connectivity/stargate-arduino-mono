@@ -128,7 +128,7 @@ void GateDevice::onMessage(char* message) {
                 message[1] = '>';
                 String response = strcat(message, "|");
                 if (message[2] == 'm') {
-                    response += createManifest(this->deviceName, this->factory.getValues());
+                    response += createManifest(this->deviceName, this->groupName, this->factory.getValues());
                     this->send(response);
                 } else if (message[2] == 't') {
                     response += "device";
@@ -147,14 +147,18 @@ void GateDevice::onMessage(char* message) {
         }
     } else {
         if (message[0] == '*') {
-            if (message[1] == '>' && this->pingInProgress) {
-                if (this->pingInUse && this->pingTimer > this->pingInterval) {
-                    int timePassed = (int) (millis() - (this->pingTimer - this->pingInterval));
-                    this->ping->setValue(timePassed / 2);
+            if (message[1] == '>') {
+                if (message[2] == 's') {
+                    this->serverStorage.handleGetResponse(message);
+                } else if (this->pingInProgress){
+                    if (this->pingInUse && this->pingTimer > this->pingInterval) {
+                        int timePassed = (int) (millis() - (this->pingTimer - this->pingInterval));
+                        this->ping->setValue(timePassed / 2);
+                    }
+                    this->pingInProgress = false;
+                    this->pingTimer = millis() + 3000;
+                    this->failedPings = 0;
                 }
-                this->pingInProgress = false;
-                this->pingTimer = millis() + 3000;
-                this->failedPings = 0;
             } else if (message[1] == '!') {
                 if(message[2] == 's') {
                     handleSubscription(true, String(message), this->factory.getValues(), &this->outputBuffer);
