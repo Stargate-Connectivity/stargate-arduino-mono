@@ -14,7 +14,6 @@ class BaseDevice : public Sender
         void setName(String name);
         void setGroup(String name);
         virtual void start() = 0;
-//        virtual void stop() = 0;
         virtual void loop() = 0;
         virtual bool isReady() = 0;
         ValueFactory factory;

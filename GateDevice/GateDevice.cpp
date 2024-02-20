@@ -27,6 +27,10 @@ GateDevice::GateDevice() : BaseDevice() {
     this->failedPings = 0;
     this->discoveryKeyword = "GateServer";
     this->discoveryPort = 10001;
+    this->networkStopped = true;
+    this->usePreviousAddress = false;
+    this->lastServerAddress = "";
+    this->lastServerPort = -1;
 };
 
 void GateDevice::start() {
@@ -34,8 +38,22 @@ void GateDevice::start() {
         this->deviceStarted = true;
         this->onDeviceStart();
         this->connectServer();
+        this->networkStopped = false;
     }
 };
+
+void GateDevice::stop(bool stopNetwork) {
+    if (this->deviceStarted) {
+        this->usePreviousAddress = true;
+        this->deviceStarted = false;
+        this->networkStopped = stopNetwork;
+        this->stopSocket();
+    }
+}
+
+void GateDevice::stop() {
+    this->stop(true);
+}
 
 void GateDevice::loop() {
     if (this->networkAvailable()) {
@@ -56,10 +74,17 @@ void GateDevice::connectServer() {
         case 0:
         {
             this->stopSocket();
-            bool success = this->startUdp(this->discoveryPort);
-            if (success) {
-                this->connectionState = 1;
+            if (this->usePreviousAddress && this->lastServerAddress.length() > 0 && this->lastServerPort != -1) {
+                this->startSocket(lastServerAddress, lastServerPort);
+                this->pingTimer = millis() + 5000;
+                this->connectionState = 2;
+            } else {
+                bool success = this->startUdp(this->discoveryPort);
+                if (success) {
+                    this->connectionState = 1;
+                }
             }
+            this->usePreviousAddress = false;
             break;
         }
         case 1:
@@ -73,6 +98,8 @@ void GateDevice::connectServer() {
                         String serverIp = this->getServerIp();
                         this->stopUdp();
                         int connectionPort = discoveryMessage.substring(separatorIndex + 1).toInt();
+                        this->lastServerAddress = serverIp;
+                        this-> lastServerPort = connectionPort;
                         this->startSocket(serverIp, connectionPort);
                         this->pingTimer = millis() + 5000;
                         this->connectionState = 2;
@@ -119,6 +146,11 @@ void GateDevice::socketOpened() {
 
 void GateDevice::socketClosed() {
     this->connectionState = 0;
+    this->loopSocket();
+    if (this->networkStopped) {
+        delay(100);
+        this->stopNetwork();
+    }
 }
 
 void GateDevice::onMessage(char* message) {
@@ -177,7 +209,7 @@ bool GateDevice::isReady() {
 }
 
 void GateDevice::usePing() {
-    if (!this->deviceStarted) {
+    if (!this->deviceStarted && !this->pingInUse) {
         this->pingInUse = true;
         this->ping = new GateInt(&this->outputBuffer);
         this->ping->id = -1;

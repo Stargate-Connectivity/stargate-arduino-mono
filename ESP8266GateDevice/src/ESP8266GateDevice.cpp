@@ -48,10 +48,17 @@ String ESP8266GateDevice::getServerIp() {
 }
 
 void ESP8266GateDevice::onDeviceStart() {
-    WiFi.begin(this->WIFI_SSID, this->WIFI_PASS);
-    while (WiFi.status() != WL_CONNECTED) {
-        delay(100);
+    if (this->networkStopped) {
+        WiFi.begin(this->WIFI_SSID, this->WIFI_PASS);
+        while (WiFi.status() != WL_CONNECTED) {
+            delay(100);
+        }
+        this->networkStopped = false;
     }
+}
+
+void ESP8266GateDevice::stopNetwork() {
+    WiFi.disconnect(true);
 }
 
 bool ESP8266GateDevice::networkAvailable() {

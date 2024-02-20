@@ -31,6 +31,8 @@ class GateDevice : public BaseDevice
     public:
         GateDevice();
         void start() override;
+        void stop();
+        void stop(bool stopNetwork);
         void loop() override;
         bool isReady() override;
         void usePing();
@@ -44,6 +46,7 @@ class GateDevice : public BaseDevice
         virtual String getUdpMessage() = 0;
         virtual String getServerIp() = 0;
         virtual void onDeviceStart() = 0;
+        virtual void stopNetwork() = 0;
         virtual bool networkAvailable() = 0;
         virtual void startSocket(String serverIp, int port) = 0;
         virtual void stopSocket() = 0;
@@ -52,6 +55,7 @@ class GateDevice : public BaseDevice
         void socketOpened();
         void socketClosed();
         void onMessage(char* message);
+        bool networkStopped;
 
     private:
         void connectServer();
@@ -62,6 +66,9 @@ class GateDevice : public BaseDevice
         int failedPings;
         bool pingInUse;
         GateInt* ping;
+        bool usePreviousAddress;
+        String lastServerAddress;
+        int lastServerPort;
 };
 
 #endif

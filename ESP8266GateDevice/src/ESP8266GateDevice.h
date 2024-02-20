@@ -37,6 +37,7 @@ class ESP8266GateDevice : public GateDevice
         String getUdpMessage() override;
         String getServerIp() override;
         void onDeviceStart() override;
+        void stopNetwork() override;
         bool networkAvailable() override;
         void startSocket(String serverIp, int port) override;
         void stopSocket() override;
