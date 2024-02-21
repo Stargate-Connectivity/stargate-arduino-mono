@@ -29,8 +29,14 @@ String GateString::getValue() {
 }
 
 void GateString::setValue(String value) {
-    this->value = value;
-    this->outputBuffer->sendValue(this);
+    this->setValue(value, true);
+}
+
+void GateString::setValue(String value, bool equalityCheck) {
+    if (!equalityCheck || !this->value.equals(value)) {
+        this->value = value;
+        this->outputBuffer->sendValue(this);
+    }
 }
 
 void GateString::setMinimumLength(int length) {

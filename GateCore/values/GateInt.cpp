@@ -33,7 +33,11 @@ long GateInt::getValue() {
 }
 
 void GateInt::setValue(long value) {
-    if(this->value != value) {
+    this->setValue(value, true);
+}
+
+void GateInt::setValue(long value, bool equalityCheck) {
+    if(!equalityCheck || (this->value != value)) {
         if (this->minSet && value < this->min) {
             value = this->min;
         } else if (this->maxSet && value > this->max) {

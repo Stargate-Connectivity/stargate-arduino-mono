@@ -14,6 +14,7 @@ class GateString : public GateValue
         String toManifest() override;
         String getValue();
         void setValue(String value);
+        void setValue(String value, bool equalityCheck);
         void setMinimumLength(int length);
 
     private:

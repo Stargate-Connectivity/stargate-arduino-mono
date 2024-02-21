@@ -31,7 +31,11 @@ double GateFloat::getValue() {
 }
 
 void GateFloat::setValue(double value) {
-    if(this->value != value) {
+    this->setValue(value, true);
+}
+
+void GateFloat::setValue(double value, bool equalityCheck) {
+    if(!equalityCheck || (this->value != value)) {
         if (this->minSet && value < this->min) {
             value = this->min;
         } else if (this->maxSet && value > this->max) {

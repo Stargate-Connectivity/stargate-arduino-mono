@@ -14,6 +14,7 @@ class GateFloat : public GateValue
         String toManifest() override;
         double getValue();
         void setValue(double value);
+        void setValue(double value, bool equalityCheck);
         void setMin(double min);
         void setMax(double max);
 

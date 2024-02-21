@@ -29,7 +29,11 @@ bool GateBool::getValue() {
 }
 
 void GateBool::setValue(bool value) {
-    if(this->value != value) {
+    this->setValue(value, true);
+}
+
+void GateBool::setValue(bool value, bool equalityCheck) {
+    if(!equalityCheck || (this->value != value)) {
         this->value = value;
         this->outputBuffer->sendValue(this);
     }

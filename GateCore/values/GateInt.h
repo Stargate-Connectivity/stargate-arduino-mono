@@ -14,6 +14,7 @@ class GateInt : public GateValue
         String toManifest() override;
         long getValue();
         void setValue(long value);
+        void setValue(long value, bool equalityCheck);
         void setMin(long min);
         void setMax(long max);
 
