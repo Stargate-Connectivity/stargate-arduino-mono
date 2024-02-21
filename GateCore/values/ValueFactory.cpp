@@ -28,6 +28,13 @@ GateString ValueFactory::createString(String direction) {
     return value;
 }
 
+GateSelect ValueFactory::createSelect(String direction) {
+    GateSelect value(this->outputBuffer);
+    value.direction = GateValue::getDirection(direction);
+    this->valuesSet.set(&value);
+    return value;
+}
+
 GateValuesSet* ValueFactory::getValues() {
     return &this->valuesSet;
 }

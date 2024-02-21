@@ -7,6 +7,7 @@
 #include "GateInt.h"
 #include "GateFloat.h"
 #include "GateString.h"
+#include "GateSelect.h"
 #include "../OutputBuffer.h"
 #include "../utils/GateValuesSet.h"
 
@@ -17,6 +18,7 @@ class ValueFactory
         GateInt createInt(String direction);
         GateFloat createFloat(String direction);
         GateString createString(String direction);
+        GateSelect createSelect(String direction);
         GateValuesSet* getValues();
         void addValue(GateValue* gateValue);
         OutputBuffer* outputBuffer;
