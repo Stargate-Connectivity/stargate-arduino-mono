@@ -21,7 +21,6 @@
 #define WiFiGateDevice_h
 
 #include <Arduino.h>
-//#include <WiFi.h>
 #include <WiFiUdp.h>
 #include <WebSocketsClient.h>
 #include "lib/GateDevice/GateDevice.h"
@@ -29,7 +28,9 @@
 class WiFiGateDevice : public GateDevice
 {
     public:
-        WiFiGateDevice(String ssid, String password);
+        WiFiGateDevice(const char* ssid, const char* password);
+        char* WIFI_SSID;
+        char* WIFI_PASS;
 
     private:
         bool startUdp(int port) override;
@@ -44,8 +45,6 @@ class WiFiGateDevice : public GateDevice
         void loopSocket() override;
         void send(String message) override;
 
-        String WIFI_SSID;
-        String WIFI_PASS;
         WiFiUDP UDP;
         WebSocketsClient webSocket;
         void webSocketEvent(WStype_t type, uint8_t * payload, size_t length);

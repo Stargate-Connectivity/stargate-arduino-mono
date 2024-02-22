@@ -3,6 +3,10 @@
 
 #include <Arduino.h>
 
+#ifdef __ARMEL__
+    #include <functional>
+#endif
+
 class GateValue
 {
     public:

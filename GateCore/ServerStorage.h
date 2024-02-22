@@ -4,6 +4,10 @@
 #include <Arduino.h>
 #include "Sender.h"
 
+#ifdef __ARMEL__
+    #include <functional>
+#endif
+
 class ServerStorage
 {
     public:

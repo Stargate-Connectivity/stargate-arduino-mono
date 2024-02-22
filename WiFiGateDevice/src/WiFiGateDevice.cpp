@@ -19,9 +19,9 @@
 
 #include "WiFiGateDevice.h"
 
-WiFiGateDevice::WiFiGateDevice(String ssid, String password) : GateDevice() {
-    this->WIFI_SSID = ssid;
-    this->WIFI_PASS = password;
+WiFiGateDevice::WiFiGateDevice(const char* ssid, const char* password) : GateDevice() {
+    this->WIFI_SSID = (char*) ssid;
+    this->WIFI_PASS = (char*) password;
 };
 
 bool WiFiGateDevice::startUdp(int port) {
