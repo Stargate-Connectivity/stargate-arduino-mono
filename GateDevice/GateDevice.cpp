@@ -99,7 +99,7 @@ void GateDevice::connectServer() {
                         this->stopUdp();
                         int connectionPort = discoveryMessage.substring(separatorIndex + 1).toInt();
                         this->lastServerAddress = serverIp;
-                        this-> lastServerPort = connectionPort;
+                        this->lastServerPort = connectionPort;
                         this->startSocket(serverIp, connectionPort);
                         this->pingTimer = millis() + 5000;
                         this->connectionState = 2;
@@ -158,7 +158,7 @@ void GateDevice::onMessage(char* message) {
         if (message[0] == '*') {
             if (message[1] == '?') {
                 message[1] = '>';
-                String response = strcat(message, "|");
+                String response = String(message) + "|";
                 if (message[2] == 'm') {
                     response += createManifest(this->deviceName, this->groupName, this->factory.getValues());
                     this->send(response);

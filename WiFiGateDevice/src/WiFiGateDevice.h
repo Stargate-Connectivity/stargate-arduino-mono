@@ -1,5 +1,5 @@
 /*
-    ESP8266GateDevice.h - Library to connect ESP8266 module with Stargate server
+    WiFiGateDevice.h - Library to connect with Stargate server using WiFi library
     Created by Michał Marchel, December 2, 2023.
 
     This library is free software; you can redistribute it and/or
@@ -17,19 +17,19 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef ESP8266GateDevice_h
-#define ESP8266GateDevice_h
+#ifndef WiFiGateDevice_h
+#define WiFiGateDevice_h
 
 #include <Arduino.h>
-#include <ESP8266WiFi.h>
+//#include <WiFi.h>
 #include <WiFiUdp.h>
 #include <WebSocketsClient.h>
 #include "lib/GateDevice/GateDevice.h"
 
-class ESP8266GateDevice : public GateDevice
+class WiFiGateDevice : public GateDevice
 {
     public:
-        ESP8266GateDevice(String ssid, String password);
+        WiFiGateDevice(String ssid, String password);
 
     private:
         bool startUdp(int port) override;

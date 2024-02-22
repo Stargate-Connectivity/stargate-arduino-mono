@@ -6,7 +6,7 @@
 
 MAX6675 thermocouple(CLK, CS, MISO);
 
-ESP8266GateDevice device("your-wifi-ssid", "your-wifi-password");
+WiFiGateDevice device("your-wifi-ssid", "your-wifi-password");
 
 GateFloat temperature = device.factory.createFloat("output");
 

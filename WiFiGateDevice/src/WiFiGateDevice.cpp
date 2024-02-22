@@ -17,22 +17,22 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include "ESP8266GateDevice.h"
+#include "WiFiGateDevice.h"
 
-ESP8266GateDevice::ESP8266GateDevice(String ssid, String password) : GateDevice() {
+WiFiGateDevice::WiFiGateDevice(String ssid, String password) : GateDevice() {
     this->WIFI_SSID = ssid;
     this->WIFI_PASS = password;
 };
 
-bool ESP8266GateDevice::startUdp(int port) {
+bool WiFiGateDevice::startUdp(int port) {
     return this->UDP.begin(port) == 1;
 }
 
-void ESP8266GateDevice::stopUdp() {
+void WiFiGateDevice::stopUdp() {
     this->UDP.stop();
 }
 
-String ESP8266GateDevice::getUdpMessage() {
+String WiFiGateDevice::getUdpMessage() {
     int packetSize = this->UDP.parsePacket();
     if (packetSize > 0) {
         char data[packetSize];
@@ -43,11 +43,11 @@ String ESP8266GateDevice::getUdpMessage() {
     }
 }
 
-String ESP8266GateDevice::getServerIp() {
+String WiFiGateDevice::getServerIp() {
     return this->UDP.remoteIP().toString();
 }
 
-void ESP8266GateDevice::onDeviceStart() {
+void WiFiGateDevice::onDeviceStart() {
     if (this->networkStopped) {
         WiFi.begin(this->WIFI_SSID, this->WIFI_PASS);
         while (WiFi.status() != WL_CONNECTED) {
@@ -57,15 +57,15 @@ void ESP8266GateDevice::onDeviceStart() {
     }
 }
 
-void ESP8266GateDevice::stopNetwork() {
+void WiFiGateDevice::stopNetwork() {
     WiFi.disconnect(true);
 }
 
-bool ESP8266GateDevice::networkAvailable() {
+bool WiFiGateDevice::networkAvailable() {
     return WiFi.status() == WL_CONNECTED;
 }
 
-void ESP8266GateDevice::webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
+void WiFiGateDevice::webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
     switch(type) {
         case WStype_DISCONNECTED:
             this->socketClosed();
@@ -80,19 +80,19 @@ void ESP8266GateDevice::webSocketEvent(WStype_t type, uint8_t * payload, size_t 
     }
 }
 
-void ESP8266GateDevice::startSocket(String serverIp, int port) {
+void WiFiGateDevice::startSocket(String serverIp, int port) {
     this->webSocket.begin(serverIp, port, "/");
-    this->webSocket.onEvent(std::bind(&ESP8266GateDevice::webSocketEvent, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+    this->webSocket.onEvent(std::bind(&WiFiGateDevice::webSocketEvent, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 }
 
-void ESP8266GateDevice::stopSocket() {
+void WiFiGateDevice::stopSocket() {
     this->webSocket.disconnect();
 }
 
-void ESP8266GateDevice::send(String message) {
+void WiFiGateDevice::send(String message) {
     this->webSocket.sendTXT(message);
 }
 
-void ESP8266GateDevice::loopSocket() {
+void WiFiGateDevice::loopSocket() {
     this->webSocket.loop();
 }
