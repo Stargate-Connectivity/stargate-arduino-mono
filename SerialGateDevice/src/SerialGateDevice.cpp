@@ -76,7 +76,7 @@ void SerialGateDevice::onMessage(String message) {
             message.setCharAt(1, '>');
             String response = message + "|";
             if (message[2] == 'm') {
-                response += createManifest(this->deviceName, this->factory.getValues());
+                response += createManifest(this->deviceName, this->groupName, this->factory.getValues());
                 this->send(response);
             } else if (message[2] == 't') {
                 response += "device";
