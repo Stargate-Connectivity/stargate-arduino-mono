@@ -20,3 +20,7 @@ void BaseDevice::setGroup(String name) {
         this->groupName = name;
     }
 }
+
+void BaseDevice::sendFunctionalMessage(String message) {
+    this->outputBuffer.sendFunctionalMessage(message);
+}

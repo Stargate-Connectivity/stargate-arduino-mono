@@ -6,6 +6,7 @@ GateList<String> parseArray(String array) {
     if (separatorIndex != -1) {
         String lengths = array.substring(0, separatorIndex);
         String values = array.substring(separatorIndex + 1);
+        params.stringLength = lengths.length() + values.length() + 1;
         int nextValueIndex;
         int valueLength;
         while(true) {
@@ -76,10 +77,7 @@ String createManifest(String deviceName, String deviceGroup, GateValuesSet* valu
     return manifest;
 }
 
-void handleIdAssigned(String idAssignedMessage) {
-    String idValue = idAssignedMessage.substring(13);
-    int separatorIndex = idValue.indexOf('|');
-    String id = idValue.substring(separatorIndex + 1);
+void handleIdAssigned(String id) {
     int bufferSize = id.length() + 1;
     byte *buffer = new byte[bufferSize];
     id.getBytes(buffer, bufferSize);
@@ -128,11 +126,13 @@ void handleValueMessage(String message, GateValuesSet* valuesSet) {
     }
 }
 
-void handleSubscription(bool subscribed, String message, GateValuesSet* valuesSet, OutputBuffer* outputBuffer) {
+int handleSubscription(bool subscribed, String message, GateValuesSet* valuesSet, OutputBuffer* outputBuffer) {
     int separatorIndex = message.indexOf('|');
+    int messageLength = separatorIndex + 1;
     if (separatorIndex != -1) {
         String idsString = message.substring(separatorIndex + 1);
         GateList<String> ids = parseArray(idsString);
+        messageLength += ids.stringLength;
         for (int i = 0; i < ids.size(); i++) {
             int valueIndex = valuesSet->find(ids.get(i).toInt());
             if (valueIndex > -1) {
@@ -143,4 +143,5 @@ void handleSubscription(bool subscribed, String message, GateValuesSet* valuesSe
             }
         }
     }
+    return messageLength;
 }

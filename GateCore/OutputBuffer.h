@@ -9,13 +9,21 @@
 class OutputBuffer
 {
     public:
+        OutputBuffer();
         void loop();
         void sendValue(GateValue* value);
-        void clear();
+        void sendFunctionalMessage(String message);
+        void sendAcknowledge();
+        void acknowledgeReceived();
+        void reset();
         Sender* device;
 
     private:
         GateValuesSet buffer;
+        String functionalBuffer;
+        bool lastMessageAcknowledged;
+        bool hasContent();
+        void flush();
 };
 
 #endif

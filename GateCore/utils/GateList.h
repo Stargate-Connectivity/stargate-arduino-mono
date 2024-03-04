@@ -11,6 +11,7 @@ class GateList
         void push(T value);
         int size();
         T get(int index);
+        int stringLength;
 
     private:
         int length;

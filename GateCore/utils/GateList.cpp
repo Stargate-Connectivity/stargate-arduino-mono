@@ -3,6 +3,7 @@
 template <typename T>
 GateList<T>::GateList() {
     this->length = 0;
+    this->stringLength = 0;
 }
 
 template <typename T>

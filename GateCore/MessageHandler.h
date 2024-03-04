@@ -11,7 +11,7 @@
 GateList<String> parseArray(String array);
 void handleValueMessage(String message, GateValuesSet* valuesSet);
 String createManifest(String deviceName, String deviceGroup, GateValuesSet* valuesSet);
-void handleIdAssigned(String idAssignedMessage);
-void handleSubscription(bool subscribed, String message, GateValuesSet* valuesSet, OutputBuffer* outputBuffer);
+void handleIdAssigned(String id);
+int handleSubscription(bool subscribed, String message, GateValuesSet* valuesSet, OutputBuffer* outputBuffer);
 
 #endif
