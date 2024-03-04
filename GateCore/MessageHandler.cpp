@@ -96,29 +96,31 @@ void handleIdAssigned(String id) {
 
 void handleValueMessage(String message, GateValuesSet* valuesSet) {
     message.trim();
-    int separatorIndex = message.indexOf('|');
-    if (separatorIndex != -1) {
-        String ids = message.substring(0, separatorIndex);
-        String values = message.substring(separatorIndex + 1);
-        GateList<int> idsList;
-        int nextIdIndex = 0;
-        while(true) {
-            nextIdIndex = ids.indexOf(',');
-            if (nextIdIndex == -1) {
-                idsList.push(ids.toInt());
-                break;
-            } else {
-                idsList.push(ids.substring(0, nextIdIndex).toInt());
-                ids = ids.substring(nextIdIndex + 1);
+    if (message.length() > 0) {
+        int separatorIndex = message.indexOf('|');
+        if (separatorIndex != -1) {
+            String ids = message.substring(0, separatorIndex);
+            String values = message.substring(separatorIndex + 1);
+            GateList<int> idsList;
+            int nextIdIndex = 0;
+            while(true) {
+                nextIdIndex = ids.indexOf(',');
+                if (nextIdIndex == -1) {
+                    idsList.push(ids.toInt());
+                    break;
+                } else {
+                    idsList.push(ids.substring(0, nextIdIndex).toInt());
+                    ids = ids.substring(nextIdIndex + 1);
+                }
             }
-        }
-        GateList<String> valuesList = parseArray(values);
-        if ((idsList.size() > 0) && (idsList.size() == valuesList.size())) {
-            for (int i = 0; i < idsList.size(); i++) {
-                int valueIndex = valuesSet->find(idsList.get(i));
-                if (valueIndex > -1) {
-                    if (valuesSet->get(valueIndex)->direction == 1) {
-                        valuesSet->get(valueIndex)->fromRemote(valuesList.get(i));
+            GateList<String> valuesList = parseArray(values);
+            if ((idsList.size() > 0) && (idsList.size() == valuesList.size())) {
+                for (int i = 0; i < idsList.size(); i++) {
+                    int valueIndex = valuesSet->find(idsList.get(i));
+                    if (valueIndex > -1) {
+                        if (valuesSet->get(valueIndex)->direction == 1) {
+                            valuesSet->get(valueIndex)->fromRemote(valuesList.get(i));
+                        }
                     }
                 }
             }

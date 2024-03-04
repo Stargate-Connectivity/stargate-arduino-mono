@@ -2,6 +2,7 @@
 #define GateList_h
 
 #include <Arduino.h>
+#include <vector>
 
 template <typename T>
 class GateList
@@ -14,8 +15,7 @@ class GateList
         int stringLength;
 
     private:
-        int length;
-        T* elements;
+        std::vector<T> elements;
 };
 
 #endif
