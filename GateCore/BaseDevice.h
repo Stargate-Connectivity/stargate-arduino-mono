@@ -19,12 +19,12 @@ class BaseDevice : public Sender
         void sendFunctionalMessage(String message) override;
         ValueFactory factory;
         ServerStorage serverStorage;
-
-    protected:
-        OutputBuffer outputBuffer;
-        bool deviceStarted;
         String deviceName;
         String groupName;
+        OutputBuffer outputBuffer;
+
+    protected:
+        bool deviceStarted;
 };
 
 #endif

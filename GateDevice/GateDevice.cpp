@@ -154,112 +154,107 @@ void GateDevice::socketClosed() {
 }
 
 void GateDevice::onMessage(char* message) {
+    String* remainingMessage = new String(message);
+    bool isAcknowledge = false;
     if (this->connectionState == 3) {
-        bool isAcknowledge = false;
-        String remainingMessage = String(message);
-        while (remainingMessage.length() > 0) {
-            if (remainingMessage.charAt(0) == '*') {
-                switch (remainingMessage.charAt(1)) {
-                    case '?':
-                        if (remainingMessage.charAt(2) == 'm') {
-                            String response = "*>manifest|";
-                            String manifest = createManifest(this->deviceName, this->groupName, this->factory.getValues());
-                            this->outputBuffer.sendFunctionalMessage(response + String(manifest.length()) + "|" + manifest);
-                            remainingMessage.remove(0, 12);
-                        } else if (remainingMessage.charAt(2) == 't') {
-                            String response = "*>type|6|device";
-                            this->outputBuffer.sendFunctionalMessage(response);
-                            remainingMessage.remove(0, 8);
-                        }
-                        break;
-                    case '!':
-                        if (remainingMessage.charAt(2) == 'a') {
-                            remainingMessage.remove(0, 13);
-                            int separatorIndex = remainingMessage.indexOf('|');
-                            int idLength = remainingMessage.substring(0, separatorIndex).toInt();
-                            remainingMessage.remove(0, separatorIndex + 1);
-                            handleIdAssigned(remainingMessage.substring(0, idLength));
-                            remainingMessage.remove(0, idLength);
-                        } else if (remainingMessage.charAt(2) == 'r') {
-                            this->pingInProgress = false;
-                            this->failedPings = 0;
-                            this->outputBuffer.reset();
-                            this->connectionState = 4;
-                            remainingMessage.remove(0, 9);
-                        }
-                        break;
-                    case '+':
-                        isAcknowledge = true;
-                        remainingMessage.remove(0, 2);
-                        break;
-                    default:
-                        remainingMessage = "";
-                }
-            } else {
-                remainingMessage = "";
-            }
-        }
-        if (isAcknowledge) {
-            this->outputBuffer.acknowledgeReceived();
-        } else {
-            this->outputBuffer.sendAcknowledge();
-        }
+        isAcknowledge = this->handleHandshakeMessage(remainingMessage);
     } else {
-        bool isAcknowledge = false;
-        String remainingMessage = String(message);
-        while (remainingMessage.length() > 0) {
-            if (remainingMessage.charAt(0) == '*') {
-                switch (remainingMessage.charAt(1)) {
-                    case '>':
-                        if (remainingMessage.charAt(2) == 's') {
-                            remainingMessage.remove(0, 13);
-                            int separatorIndex = remainingMessage.indexOf('|');
-                            int responseLength = remainingMessage.substring(0, separatorIndex).toInt();
-                            remainingMessage.remove(0, separatorIndex + 1);
-                            this->serverStorage.handleGetResponse(remainingMessage.substring(0, responseLength));
-                            remainingMessage.remove(0, responseLength);
-                        } else if (remainingMessage.charAt(2) == 'p') {
-                            if (this->pingInProgress) {
-                                if (this->pingInUse && this->pingTimer > this->pingInterval) {
-                                    int timePassed = (int) (millis() - (this->pingTimer - this->pingInterval));
-                                    this->ping->setValue(timePassed / 2);
-                                }
-                                this->pingInProgress = false;
-                                this->pingTimer = millis() + 3000;
-                                this->failedPings = 0;
-                            }
-                            remainingMessage.remove(0, 10);
-                        } else {
-                            remainingMessage = "";
-                        }
-                        break;
-                    case '!':
-                        if(remainingMessage.charAt(2) == 's') {
-                            int messageLength = handleSubscription(true, remainingMessage, this->factory.getValues(), &this->outputBuffer);
-                            remainingMessage.remove(0, messageLength);
-                        } else if (remainingMessage.charAt(2) == 'u') {
-                            int messageLength = handleSubscription(false, remainingMessage, this->factory.getValues(), &this->outputBuffer);
-                            remainingMessage.remove(0, messageLength);
-                        }
-                        break;
-                    case '+':
-                        isAcknowledge = true;
-                        remainingMessage.remove(0, 2);
-                        break;
-                    default:
-                        remainingMessage = "";
-                }
-            } else {
-                handleValueMessage(remainingMessage, this->factory.getValues());
-                remainingMessage = "";
+        isAcknowledge = this->handleReadyStateMessage(remainingMessage);
+    }
+    if (isAcknowledge) {
+        this->outputBuffer.acknowledgeReceived();
+    } else {
+        this->outputBuffer.sendAcknowledge();
+    }
+    delete remainingMessage;
+}
+
+bool GateDevice::handleHandshakeMessage(String* remainingMessage) {
+    bool isAcknowledge = false;
+    while (remainingMessage->length() > 0) {
+        if (remainingMessage->charAt(0) == '*') {
+            switch (remainingMessage->charAt(1)) {
+                case '?':
+                    if (remainingMessage->charAt(2) == 'm') {
+                        handleManifestRequest(remainingMessage, this);
+                    } else if (remainingMessage->charAt(2) == 't') {
+                        handleTypeRequest(remainingMessage, this);
+                    } else {
+                        remainingMessage->remove(0);
+                    }
+                    break;
+                case '!':
+                    if (remainingMessage->charAt(2) == 'a') {
+                        handleIdAssigned(remainingMessage);
+                    } else if (remainingMessage->charAt(2) == 'r') {
+                        this->pingInProgress = false;
+                        this->failedPings = 0;
+                        this->outputBuffer.reset();
+                        this->connectionState = 4;
+                        remainingMessage->remove(0, 9);
+                    } else {
+                        remainingMessage->remove(0);
+                    }
+                    break;
+                case '+':
+                    isAcknowledge = true;
+                    remainingMessage->remove(0, 2);
+                    break;
+                default:
+                    remainingMessage->remove(0);
             }
-        }
-        if (isAcknowledge) {
-            this->outputBuffer.acknowledgeReceived();
         } else {
-            this->outputBuffer.sendAcknowledge();
+            remainingMessage->remove(0);
         }
     }
+    return isAcknowledge;
+}
+
+bool GateDevice::handleReadyStateMessage(String* remainingMessage) {
+    bool isAcknowledge = false;
+    while (remainingMessage->length() > 0) {
+        if (remainingMessage->charAt(0) == '*') {
+            switch (remainingMessage->charAt(1)) {
+                case '>':
+                    if (remainingMessage->charAt(2) == 's') {
+                        handleServerStorageGetResponse(remainingMessage, this);
+                    } else if (remainingMessage->charAt(2) == 'p') {
+                        if (this->pingInProgress) {
+                            if (this->pingInUse && this->pingTimer > this->pingInterval) {
+                                int timePassed = (int) (millis() - (this->pingTimer - this->pingInterval));
+                                this->ping->setValue(timePassed / 2);
+                            }
+                            this->pingInProgress = false;
+                            this->pingTimer = millis() + 3000;
+                            this->failedPings = 0;
+                        }
+                        remainingMessage->remove(0, 10);
+                    } else {
+                        remainingMessage->remove(0);
+                    }
+                    break;
+                case '!':
+                    if(remainingMessage->charAt(2) == 's') {
+                        handleSubscription(true, remainingMessage, this);
+                    } else if (remainingMessage->charAt(2) == 'u') {
+                        handleSubscription(false, remainingMessage, this);
+                    } else {
+                        remainingMessage->remove(0);
+                    }
+                    break;
+                case '+':
+                    isAcknowledge = true;
+                    remainingMessage->remove(0, 2);
+                    break;
+                default:
+                    remainingMessage->remove(0);
+            }
+        } else {
+            handleValueMessage(remainingMessage, this->factory.getValues());
+            remainingMessage->remove(0);
+        }
+    }
+    return isAcknowledge;
 }
 
 bool GateDevice::isReady() {

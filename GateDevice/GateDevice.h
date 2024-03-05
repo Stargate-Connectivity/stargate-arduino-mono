@@ -69,6 +69,8 @@ class GateDevice : public BaseDevice
         bool usePreviousAddress;
         String lastServerAddress;
         int lastServerPort;
+        bool handleHandshakeMessage(String* remainingMessage);
+        bool handleReadyStateMessage(String* remainingMessage);
 };
 
 #endif
