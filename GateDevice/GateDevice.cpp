@@ -220,10 +220,6 @@ bool GateDevice::handleReadyStateMessage(String* remainingMessage) {
                         handleServerStorageGetResponse(remainingMessage, this);
                     } else if (remainingMessage->charAt(2) == 'p') {
                         if (this->pingInProgress) {
-                            if (this->pingInUse && this->pingTimer > this->pingInterval) {
-                                int timePassed = (int) (millis() - (this->pingTimer - this->pingInterval));
-                                this->ping->setValue(timePassed / 2);
-                            }
                             this->pingInProgress = false;
                             this->pingTimer = millis() + 3000;
                             this->failedPings = 0;
@@ -259,15 +255,4 @@ bool GateDevice::handleReadyStateMessage(String* remainingMessage) {
 
 bool GateDevice::isReady() {
     return this->connectionState == 4;
-}
-
-void GateDevice::usePing() {
-    if (!this->deviceStarted && !this->pingInUse) {
-        this->pingInUse = true;
-        this->ping = new GateInt(&this->outputBuffer);
-        this->ping->id = -1;
-        this->ping->direction = GateValue::getDirection("output");
-        this->ping->setName("Ping");
-        this->factory.addValue(this->ping);
-    }
 }

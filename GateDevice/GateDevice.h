@@ -35,7 +35,6 @@ class GateDevice : public BaseDevice
         void stop(bool stopNetwork);
         void loop() override;
         bool isReady() override;
-        void usePing();
         int connectionState;
         String discoveryKeyword;
         int discoveryPort;
@@ -64,8 +63,6 @@ class GateDevice : public BaseDevice
         unsigned long pingTimer;
         bool pingInProgress;
         int failedPings;
-        bool pingInUse;
-        GateInt* ping;
         bool usePreviousAddress;
         String lastServerAddress;
         int lastServerPort;
