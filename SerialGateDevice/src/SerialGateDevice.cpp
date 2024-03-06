@@ -38,12 +38,12 @@ void SerialGateDevice::start() {
 }
 
 void SerialGateDevice::loop() {
-    if (this->ready) {
+    if (Serial) {
         this->outputBuffer.loop();
-    }
-    if (Serial.available() > 0) {
-        String message = Serial.readStringUntil('\n');
-        this->onMessage(message);
+        if (Serial.available() > 0) {
+            String message = Serial.readStringUntil('\n');
+            this->onMessage(&message);
+        }
     }
 }
 
@@ -51,41 +51,65 @@ bool SerialGateDevice::isReady() {
     return this->ready;
 }
 
-void SerialGateDevice::onMessage(String message) {
-    if (message.charAt(0) == '*') {
-        if (message.charAt(1) == '!') {
-            switch (message.charAt(2)) {
-                case 's':
-                    handleSubscription(true, String(message), this->factory.getValues(), &this->outputBuffer);
+void SerialGateDevice::onMessage(String* remainingMessage) {
+    bool isAcknowledge = false;
+    while (remainingMessage->length() > 0) {
+        if (remainingMessage->charAt(0) == '*') {
+            switch (remainingMessage->charAt(1)) {
+                case '!':
+                    switch (remainingMessage->charAt(2)) {
+                        case 's':
+                            handleSubscription(true, remainingMessage, this);
+                            break;
+                        case 'u':
+                            handleSubscription(false, remainingMessage, this);
+                            break;
+                        case 'a':
+                            handleIdAssigned(remainingMessage);
+                            break;
+                        case 'r':
+                            this->outputBuffer.reset();
+                            this->ready = true;
+                            remainingMessage->remove(0, 9);
+                            break;
+                        case 'n':
+                            this->ready = false;
+                            remainingMessage->remove(0, 10);
+                            break;
+                        default:
+                            remainingMessage->remove(0);
+                    }
                     break;
-                case 'u':
-                    handleSubscription(false, String(message), this->factory.getValues(), &this->outputBuffer);
+                case '?':
+                    if (remainingMessage->charAt(2) == 'm') {
+                        handleManifestRequest(remainingMessage, this);
+                    } else if (remainingMessage->charAt(2) == 't') {
+                        handleTypeRequest(remainingMessage, this);
+                    } else {
+                        remainingMessage->remove(0);
+                    }
                     break;
-                case 'a':
-                    handleIdAssigned(String(message));
+                case '>':
+                    handleServerStorageGetResponse(remainingMessage, this);
                     break;
-                case 'r':
-                    this->outputBuffer.clear();
-                    this->ready = true;
+                case '+':
+                    isAcknowledge = true;
+                    remainingMessage->remove(0, 2);
                     break;
-                case 'n':
-                    this->ready = false;
+                case '.':
+                    remainingMessage->remove(0, 2);
                     break;
+                default:
+                    remainingMessage->remove(0);
             }
-        } else if (message.charAt(1) == '?') {
-            message.setCharAt(1, '>');
-            String response = message + "|";
-            if (message[2] == 'm') {
-                response += createManifest(this->deviceName, this->groupName, this->factory.getValues());
-                this->send(response);
-            } else if (message[2] == 't') {
-                response += "device";
-                this->send(response);
-            }
-        } else if (message.charAt(1) == '>') {
-            this->serverStorage.handleGetResponse(message);
+        } else {
+            handleValueMessage(remainingMessage, this->factory.getValues());
+            remainingMessage->remove(0);
         }
+    }
+    if (isAcknowledge) {
+        this->outputBuffer.acknowledgeReceived();
     } else {
-        handleValueMessage(String(message), this->factory.getValues());
+        this->outputBuffer.sendAcknowledge();
     }
 }

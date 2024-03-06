@@ -1,37 +1,15 @@
 #include "MessageHandler.h"
 
-GateList<String> parseArray(String array) {
-    GateList<String> params;
-    int separatorIndex = array.indexOf('|');
-    if (separatorIndex != -1) {
-        String lengths = array.substring(0, separatorIndex);
-        String values = array.substring(separatorIndex + 1);
-        params.stringLength = lengths.length() + values.length() + 1;
-        int nextValueIndex;
-        int valueLength;
-        while(true) {
-            nextValueIndex = lengths.indexOf(',');
-            if (nextValueIndex == -1) {
-                params.push(values);
-                break;
-            } else {
-                valueLength = lengths.substring(0, nextValueIndex).toInt();
-                if (valueLength > values.length()) {
-                    return GateList<String>();
-                }
-                params.push(values.substring(0, valueLength));
-                lengths = lengths.substring(nextValueIndex + 1);
-                values = values.substring(valueLength);
-            }
-        }
-    }
-    return params;
-}
-
 void handleManifestRequest(String* message, BaseDevice* device) {
-    String response = "*>manifest|";
-    String manifest = createManifest(device->deviceName, device->groupName, device->factory.getValues());
-    device->outputBuffer.sendFunctionalMessage(response + String(manifest.length()) + "|" + manifest);
+    String* response = new String("*>manifest|");
+    {
+        String manifest = createManifest(device->deviceName, device->groupName, device->factory.getValues());
+        response->concat(manifest.length());
+        response->concat("|");
+        response->concat(manifest);
+    }
+    device->outputBuffer.sendFunctionalMessage(response);
+    delete response;
     message->remove(0, 12);
 }
 
@@ -75,6 +53,7 @@ String createManifest(String deviceName, String deviceGroup, GateValuesSet* valu
         }
     }
     EEPROM.end();
+
     manifest += "\"deviceName\":\"" + deviceName + "\"";
     if (deviceGroup.length() > 0) {
         manifest += ",\"group\":\"" + deviceGroup + "\"";
@@ -123,56 +102,105 @@ void handleServerStorageGetResponse(String* message, BaseDevice* device) {
     message->remove(0, responseLength);
 }
 
-void handleSubscription(bool subscribed, String* message, BaseDevice* device) {
-    int separatorIndex = message->indexOf('|');
-    int messageLength = separatorIndex + 1;
-    if (separatorIndex != -1) {
-        String idsString = message->substring(separatorIndex + 1);
-        GateList<String> ids = parseArray(idsString);
-        messageLength += ids.stringLength;
-        GateValuesSet* valuesSet = device->factory.getValues();
-        for (int i = 0; i < ids.size(); i++) {
-            int valueIndex = valuesSet->find(ids.get(i).toInt());
-            if (valueIndex > -1) {
-                valuesSet->get(valueIndex)->subscribed = subscribed;
-                if (subscribed) {
-                    device->outputBuffer.sendValue(valuesSet->get(valueIndex));
-                }
-            }
+void setValueSubscribed(int id, bool subscribed, BaseDevice* device) {
+    GateValuesSet* valuesSet = device->factory.getValues();
+    int valueIndex = valuesSet->find(id);
+    if (valueIndex > -1) {
+        valuesSet->get(valueIndex)->subscribed = subscribed;
+        if (subscribed) {
+            device->outputBuffer.sendValue(valuesSet->get(valueIndex));
         }
     }
-    message->remove(0, messageLength);
+}
+
+void handleSubscription(bool subscribed, String* message, BaseDevice* device) {
+    int separatorIndex = message->indexOf('|');
+    if (separatorIndex != -1) {
+        message->remove(0, separatorIndex + 1);
+        separatorIndex = message->indexOf('|');
+        if (separatorIndex != -1) {
+            String lengths = message->substring(0, separatorIndex);
+            message->remove(0, separatorIndex + 1);
+
+            int lengthsFirstSeparator = -1;
+            int lengthsSecondSeparator = -1;
+            do {
+                lengthsSecondSeparator = lengths.indexOf(',', lengthsFirstSeparator + 1);
+                int length = -1;
+                if (lengthsSecondSeparator == -1) {
+                    length = lengths.substring(lengthsFirstSeparator + 1).toInt();
+                } else {
+                    length = lengths.substring(lengthsFirstSeparator + 1, lengthsSecondSeparator).toInt();
+                }
+                lengthsFirstSeparator = lengthsSecondSeparator;
+
+                if (length > message->length()) {
+                    message->remove(0);
+                    break;
+                }
+                int id = message->substring(0, length).toInt();
+                message->remove(0, length);
+                setValueSubscribed(id, subscribed, device);
+            } while (lengthsFirstSeparator > -1);
+
+            return;
+        }
+    }
+    message->remove(0);
+}
+
+void setGateValue (int id, String* value, GateValuesSet* valuesSet) {
+    int valueIndex = valuesSet->find(id);
+    if (valueIndex > -1) {
+        if (valuesSet->get(valueIndex)->direction == 1) {
+            valuesSet->get(valueIndex)->fromRemote(*value);
+        }
+    }
 }
 
 void handleValueMessage(String* message, GateValuesSet* valuesSet) {
     message->trim();
     if (message->length() > 0) {
-        int separatorIndex = message->indexOf('|');
-        if (separatorIndex != -1) {
-            String ids = message->substring(0, separatorIndex);
-            String values = message->substring(separatorIndex + 1);
-            GateList<int> idsList;
-            int nextIdIndex = 0;
-            while(true) {
-                nextIdIndex = ids.indexOf(',');
-                if (nextIdIndex == -1) {
-                    idsList.push(ids.toInt());
-                    break;
-                } else {
-                    idsList.push(ids.substring(0, nextIdIndex).toInt());
-                    ids = ids.substring(nextIdIndex + 1);
-                }
-            }
-            GateList<String> valuesList = parseArray(values);
-            if ((idsList.size() > 0) && (idsList.size() == valuesList.size())) {
-                for (int i = 0; i < idsList.size(); i++) {
-                    int valueIndex = valuesSet->find(idsList.get(i));
-                    if (valueIndex > -1) {
-                        if (valuesSet->get(valueIndex)->direction == 1) {
-                            valuesSet->get(valueIndex)->fromRemote(valuesList.get(i));
-                        }
+        int firstSeparatorIndex = message->indexOf('|');
+        if (firstSeparatorIndex != -1) {
+            int secondSeparatorIndex = message->indexOf('|', firstSeparatorIndex + 1);
+            if (secondSeparatorIndex != -1) {
+                String ids = message->substring(0, firstSeparatorIndex);
+                String lengths = message->substring(firstSeparatorIndex + 1, secondSeparatorIndex);
+                String values = message->substring(secondSeparatorIndex + 1);
+
+                firstSeparatorIndex = -1;
+                secondSeparatorIndex = -1;
+                int lengthsFirstSeparator = -1;
+                int lengthsSecondSeparator = -1;
+                int lengthProcessed = 0;
+                do {
+                    secondSeparatorIndex = ids.indexOf(',', firstSeparatorIndex + 1);
+                    int id = -1;
+                    if (secondSeparatorIndex == -1) {
+                        id = ids.substring(firstSeparatorIndex + 1).toInt();
+                    } else {
+                        id = ids.substring(firstSeparatorIndex + 1, secondSeparatorIndex).toInt();
                     }
-                }
+                    firstSeparatorIndex = secondSeparatorIndex;
+
+                    lengthsSecondSeparator = lengths.indexOf(',', lengthsFirstSeparator + 1);
+                    int length = -1;
+                    if (lengthsSecondSeparator == -1) {
+                        length = lengths.substring(lengthsFirstSeparator + 1).toInt();
+                    } else {
+                        length = lengths.substring(lengthsFirstSeparator + 1, lengthsSecondSeparator).toInt();
+                    }
+                    lengthsFirstSeparator = lengthsSecondSeparator;
+
+                    int currentLength = lengthProcessed + length;
+                    if (currentLength > values.length()) {
+                        break;
+                    }
+                    String value = values.substring(lengthProcessed, currentLength);
+                    setGateValue(id, &value, valuesSet);
+                    lengthProcessed = currentLength;
+                } while (firstSeparatorIndex > -1 || lengthsFirstSeparator > -1);
             }
         }
     }

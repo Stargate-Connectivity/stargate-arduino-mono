@@ -13,6 +13,7 @@ class OutputBuffer
         void loop();
         void sendValue(GateValue* value);
         void sendFunctionalMessage(String message);
+        void sendFunctionalMessage(String* message);
         void sendAcknowledge();
         void acknowledgeReceived();
         void reset();

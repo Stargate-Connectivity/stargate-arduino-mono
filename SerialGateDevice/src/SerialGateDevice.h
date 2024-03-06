@@ -36,7 +36,7 @@ class SerialGateDevice : public BaseDevice
         void send(String message) override;
 
     private:
-        void onMessage(String message);
+        void onMessage(String* remainingMessage);
         bool ready;
 };
 

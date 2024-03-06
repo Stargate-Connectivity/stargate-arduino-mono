@@ -21,6 +21,10 @@ void OutputBuffer::sendFunctionalMessage(String message) {
     this->functionalBuffer += message;
 }
 
+void OutputBuffer::sendFunctionalMessage(String* message) {
+    this->functionalBuffer.concat(*message);
+}
+
 void OutputBuffer::sendAcknowledge() {
     this->functionalBuffer += "*+";
     this->flush();
@@ -32,7 +36,7 @@ void OutputBuffer::acknowledgeReceived() {
 
 void OutputBuffer::reset() {
     this->buffer.clear();
-    this->functionalBuffer = "";
+    this->functionalBuffer.remove(0);
     this->lastMessageAcknowledged = true;
 }
 
@@ -57,5 +61,5 @@ void OutputBuffer::flush() {
         this->buffer.clear();
     }
     this->device->send(this->functionalBuffer);
-    this->functionalBuffer = "";
+    this->functionalBuffer.remove(0);
 }
