@@ -21,10 +21,8 @@
 
 GateDevice::GateDevice() : BaseDevice() {
     this->connectionState = 0;
-    this->pingInterval = 1000;
+    this->pingInterval = 7000;
     this->pingTimer = 0;
-    this->pingInProgress = false;
-    this->failedPings = 0;
     this->discoveryKeyword = "GateServer";
     this->discoveryPort = 10001;
     this->networkStopped = true;
@@ -76,7 +74,7 @@ void GateDevice::connectServer() {
             this->stopSocket();
             if (this->usePreviousAddress && this->lastServerAddress.length() > 0 && this->lastServerPort != -1) {
                 this->startSocket(lastServerAddress, lastServerPort);
-                this->pingTimer = millis() + 5000;
+                this->pingTimer = millis() + this->pingInterval;
                 this->connectionState = 2;
             } else {
                 bool success = this->startUdp(this->discoveryPort);
@@ -101,7 +99,7 @@ void GateDevice::connectServer() {
                         this->lastServerAddress = serverIp;
                         this->lastServerPort = connectionPort;
                         this->startSocket(serverIp, connectionPort);
-                        this->pingTimer = millis() + 5000;
+                        this->pingTimer = millis() + this->pingInterval;
                         this->connectionState = 2;
                     }
                 }
@@ -125,18 +123,8 @@ void GateDevice::connectServer() {
 void GateDevice::handlePing() {
     unsigned long now = millis();
     if (this->pingTimer < now) {
-        if (this->pingInProgress) {
-            this->failedPings++;
-            if (this->failedPings > 3) {
-                this->stopSocket();
-                this->connectionState = 0;
-            }
-        }
-        if (this->connectionState == 4) {
-            this->pingInProgress = true;
-            this->pingTimer = now + this->pingInterval;
-            this->send("*?ping||");
-        }
+        this->stopSocket();
+        this->connectionState = 0;
     }
 }
 
@@ -154,6 +142,7 @@ void GateDevice::socketClosed() {
 }
 
 void GateDevice::onMessage(char* message) {
+    this->pingTimer = millis() + this->pingInterval;
     String* remainingMessage = new String(message);
     bool isAcknowledge = false;
     if (this->connectionState == 3) {
@@ -187,8 +176,6 @@ bool GateDevice::handleHandshakeMessage(String* remainingMessage) {
                     if (remainingMessage->charAt(2) == 'a') {
                         handleIdAssigned(remainingMessage);
                     } else if (remainingMessage->charAt(2) == 'r') {
-                        this->pingInProgress = false;
-                        this->failedPings = 0;
                         this->outputBuffer.reset();
                         this->connectionState = 4;
                         remainingMessage->remove(0, 9);
@@ -198,6 +185,9 @@ bool GateDevice::handleHandshakeMessage(String* remainingMessage) {
                     break;
                 case '+':
                     isAcknowledge = true;
+                    remainingMessage->remove(0, 2);
+                    break;
+                case '.':
                     remainingMessage->remove(0, 2);
                     break;
                 default:
@@ -216,18 +206,7 @@ bool GateDevice::handleReadyStateMessage(String* remainingMessage) {
         if (remainingMessage->charAt(0) == '*') {
             switch (remainingMessage->charAt(1)) {
                 case '>':
-                    if (remainingMessage->charAt(2) == 's') {
-                        handleServerStorageGetResponse(remainingMessage, this);
-                    } else if (remainingMessage->charAt(2) == 'p') {
-                        if (this->pingInProgress) {
-                            this->pingInProgress = false;
-                            this->pingTimer = millis() + 3000;
-                            this->failedPings = 0;
-                        }
-                        remainingMessage->remove(0, 10);
-                    } else {
-                        remainingMessage->remove(0);
-                    }
+                    handleServerStorageGetResponse(remainingMessage, this);
                     break;
                 case '!':
                     if(remainingMessage->charAt(2) == 's') {
@@ -240,6 +219,9 @@ bool GateDevice::handleReadyStateMessage(String* remainingMessage) {
                     break;
                 case '+':
                     isAcknowledge = true;
+                    remainingMessage->remove(0, 2);
+                    break;
+                case '.':
                     remainingMessage->remove(0, 2);
                     break;
                 default:

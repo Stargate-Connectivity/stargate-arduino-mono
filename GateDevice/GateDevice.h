@@ -61,8 +61,6 @@ class GateDevice : public BaseDevice
         void handlePing();
         int pingInterval;
         unsigned long pingTimer;
-        bool pingInProgress;
-        int failedPings;
         bool usePreviousAddress;
         String lastServerAddress;
         int lastServerPort;
