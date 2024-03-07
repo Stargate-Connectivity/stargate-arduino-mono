@@ -15,7 +15,7 @@ void handleManifestRequest(String* message, BaseDevice* device) {
 
 void handleTypeRequest(String* message, BaseDevice* device) {
     String response = "*>type|6|device";
-    device->outputBuffer.sendFunctionalMessage(response);
+    device->outputBuffer.sendFunctionalMessage(&response);
     message->remove(0, 8);
 }
 

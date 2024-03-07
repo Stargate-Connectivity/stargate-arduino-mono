@@ -43,7 +43,7 @@ class WiFiGateDevice : public GateDevice
         void startSocket(String serverIp, int port) override;
         void stopSocket() override;
         void loopSocket() override;
-        void send(String message) override;
+        void send(String* message) override;
 
         WiFiUDP UDP;
         WebSocketsClient webSocket;

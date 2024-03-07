@@ -16,7 +16,7 @@ class BaseDevice : public Sender
         virtual void start() = 0;
         virtual void loop() = 0;
         virtual bool isReady() = 0;
-        void sendFunctionalMessage(String message) override;
+        void sendFunctionalMessage(String* message) override;
         ValueFactory factory;
         ServerStorage serverStorage;
         String deviceName;

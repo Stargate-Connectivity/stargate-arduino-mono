@@ -2,6 +2,7 @@
 
 OutputBuffer::OutputBuffer() {
     this->lastMessageAcknowledged = true;
+    this->functionalBuffer = new String();
 }
 
 void OutputBuffer::loop() {
@@ -17,16 +18,12 @@ void OutputBuffer::sendValue(GateValue* value) {
     }
 }
 
-void OutputBuffer::sendFunctionalMessage(String message) {
-    this->functionalBuffer += message;
-}
-
 void OutputBuffer::sendFunctionalMessage(String* message) {
-    this->functionalBuffer.concat(*message);
+    this->functionalBuffer->concat(*message);
 }
 
 void OutputBuffer::sendAcknowledge() {
-    this->functionalBuffer += "*+";
+    this->functionalBuffer->concat("*+");
     this->flush();
 }
 
@@ -36,12 +33,12 @@ void OutputBuffer::acknowledgeReceived() {
 
 void OutputBuffer::reset() {
     this->buffer.clear();
-    this->functionalBuffer.remove(0);
+    this->functionalBuffer->remove(0);
     this->lastMessageAcknowledged = true;
 }
 
 bool OutputBuffer::hasContent() {
-    return (this->buffer.size() > 0) || (this->functionalBuffer.length() > 0);
+    return (this->buffer.size() > 0) || (this->functionalBuffer->length() > 0);
 }
 
 void OutputBuffer::flush() {
@@ -50,16 +47,16 @@ void OutputBuffer::flush() {
         String lengths = "";
         String values = "";
         for (int i = 0; i < this->buffer.size(); i++) {
-            ids += (this->buffer.get(i)->id == -1 ? "@ping" : String(this->buffer.get(i)->id)) + ",";
+            ids += String(this->buffer.get(i)->id) + ",";
             String textValue = this->buffer.get(i)->toString();
             lengths += String(textValue.length()) + ",";
             values += textValue;
         }
         ids.remove(ids.length() - 1);
         lengths.remove(lengths.length() - 1);
-        this->functionalBuffer += ids + "|" + lengths + "|" + values;
+        this->functionalBuffer->concat(ids + "|" + lengths + "|" + values);
         this->buffer.clear();
     }
     this->device->send(this->functionalBuffer);
-    this->functionalBuffer.remove(0);
+    this->functionalBuffer->remove(0);
 }

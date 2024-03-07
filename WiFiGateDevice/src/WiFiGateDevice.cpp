@@ -89,8 +89,8 @@ void WiFiGateDevice::stopSocket() {
     this->webSocket.disconnect();
 }
 
-void WiFiGateDevice::send(String message) {
-    this->webSocket.sendTXT(message);
+void WiFiGateDevice::send(String* message) {
+    this->webSocket.sendTXT(*message);
 }
 
 void WiFiGateDevice::loopSocket() {

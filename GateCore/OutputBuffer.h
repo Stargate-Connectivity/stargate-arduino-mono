@@ -12,7 +12,6 @@ class OutputBuffer
         OutputBuffer();
         void loop();
         void sendValue(GateValue* value);
-        void sendFunctionalMessage(String message);
         void sendFunctionalMessage(String* message);
         void sendAcknowledge();
         void acknowledgeReceived();
@@ -21,7 +20,7 @@ class OutputBuffer
 
     private:
         GateValuesSet buffer;
-        String functionalBuffer;
+        String* functionalBuffer;
         bool lastMessageAcknowledged;
         bool hasContent();
         void flush();

@@ -20,7 +20,7 @@ void ServerStorage::get(String key, StorageGetCallback onResponse) {
     if (key.length() > 0) {
         this->onGetResponse = onResponse;
         String message = "*?storageGet|" + this->oneParam(key);
-        this->device->sendFunctionalMessage(message);
+        this->device->sendFunctionalMessage(&message);
     }
 }
 
@@ -29,7 +29,7 @@ void ServerStorage::get(String key, String directory, StorageGetCallback onRespo
         if (directory.length() > 0) {
             this->onGetResponse = onResponse;
             String message = "*?storageGet|" + this->twoParams(key, directory);
-            this->device->sendFunctionalMessage(message);
+            this->device->sendFunctionalMessage(&message);
         } else {
             this->get(key, onResponse);
         }
@@ -39,7 +39,7 @@ void ServerStorage::get(String key, String directory, StorageGetCallback onRespo
 void ServerStorage::set(String key, String value) {
     if (key.length() > 0 && value.length() > 0) {
         String message = "*!storageSet|" + this->twoParams(key, value);
-        this->device->sendFunctionalMessage(message);
+        this->device->sendFunctionalMessage(&message);
     }
 }
 
@@ -47,7 +47,7 @@ void ServerStorage::set(String key, String value, String directory) {
     if (key.length() > 0 && value.length() > 0) {
         if (directory.length() > 0) {
             String message = "*!storageSet|" + this->threeParams(key, value, directory);
-            this->device->sendFunctionalMessage(message);
+            this->device->sendFunctionalMessage(&message);
         } else {
             this->set(key, value);
         }
@@ -57,7 +57,7 @@ void ServerStorage::set(String key, String value, String directory) {
 void ServerStorage::append(String key, String value) {
     if (key.length() > 0 && value.length() > 0) {
         String message = "*!storageAppend|" + this->twoParams(key, value);
-        this->device->sendFunctionalMessage(message);
+        this->device->sendFunctionalMessage(&message);
     }
 }
 
@@ -65,7 +65,7 @@ void ServerStorage::append(String key, String value, String directory) {
     if (key.length() > 0 && value.length() > 0) {
         if (directory.length() > 0) {
             String message = "*!storageAppend|" + this->threeParams(key, value, directory);
-            this->device->sendFunctionalMessage(message);
+            this->device->sendFunctionalMessage(&message);
         } else {
             this->set(key, value);
         }
@@ -78,7 +78,7 @@ void ServerStorage::remove() {
 
 void ServerStorage::remove(String key) {
     String message = "*!storageRemove|" + this->oneParam(key);
-    this->device->sendFunctionalMessage(message);
+    this->device->sendFunctionalMessage(&message);
 }
 
 void ServerStorage::remove(String key, String directory) {
@@ -86,11 +86,10 @@ void ServerStorage::remove(String key, String directory) {
         this->remove(key);
     } else {
         String message = "*!storageRemove|" + this->twoParams(key, directory);
-        this->device->sendFunctionalMessage(message);
+        this->device->sendFunctionalMessage(&message);
     }
 }
 
 void ServerStorage::handleGetResponse(String message) {
-    String value = message.substring(13);
-    this->onGetResponse(value);
+    this->onGetResponse(message);
 }

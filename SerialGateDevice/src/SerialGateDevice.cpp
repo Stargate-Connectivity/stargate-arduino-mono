@@ -23,9 +23,9 @@ SerialGateDevice::SerialGateDevice() : BaseDevice() {
     this->ready = false;
 };
 
-void SerialGateDevice::send(String message) {
+void SerialGateDevice::send(String* message) {
     if (Serial) {
-        Serial.println(message);
+        Serial.println(*message);
     }
 }
 

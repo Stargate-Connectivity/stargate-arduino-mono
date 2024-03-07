@@ -21,6 +21,6 @@ void BaseDevice::setGroup(String name) {
     }
 }
 
-void BaseDevice::sendFunctionalMessage(String message) {
+void BaseDevice::sendFunctionalMessage(String* message) {
     this->outputBuffer.sendFunctionalMessage(message);
 }
