@@ -74,6 +74,7 @@ void SerialGateDevice::onMessage(String* remainingMessage) {
                             break;
                         case 'n':
                             this->ready = false;
+                            this->factory.getValues()->unsubscribeAll();
                             remainingMessage->remove(0, 10);
                             break;
                         default:

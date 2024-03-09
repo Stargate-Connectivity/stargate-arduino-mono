@@ -13,6 +13,7 @@ class GateValuesSet
         GateValue* get(int index);
         int find(int id);
         void clear();
+        void unsubscribeAll();
 
     private:
         int length;

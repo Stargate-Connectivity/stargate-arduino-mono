@@ -53,3 +53,9 @@ void GateValuesSet::clear() {
         this->length = 0;
     }
 }
+
+void GateValuesSet::unsubscribeAll() {
+    for (int i = 0; i < this->length; i++) {
+        this->values[i]->subscribed = false;
+    }
+}

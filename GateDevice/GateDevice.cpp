@@ -63,6 +63,9 @@ void GateDevice::loop() {
             this->connectServer();
         }
     } else {
+        if (this->connectionState == 4) {
+            this->factory.getValues()->unsubscribeAll();
+        }
         this->connectionState = 0;
     }
 }
@@ -134,6 +137,7 @@ void GateDevice::socketOpened() {
 
 void GateDevice::socketClosed() {
     this->connectionState = 0;
+    this->factory.getValues()->unsubscribeAll();
     this->loopSocket();
     if (this->networkStopped) {
         delay(100);
