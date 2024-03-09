@@ -2,8 +2,6 @@
 
 BaseDevice::BaseDevice() {
     this->deviceStarted = false;
-    this->deviceName = "";
-    this->groupName = "";
     this->outputBuffer.device = this;
     this->serverStorage.device = this;
     this->factory.outputBuffer = &this->outputBuffer;

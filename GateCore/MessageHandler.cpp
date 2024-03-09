@@ -3,7 +3,8 @@
 void handleManifestRequest(String* message, BaseDevice* device) {
     String* response = new String("*>manifest|");
     {
-        String manifest = createManifest(device->deviceName, device->groupName, device->factory.getValues());
+//        String manifest = createManifest(device->deviceName, device->groupName, device->factory.getValues());
+        String manifest = createManifest(device);
         response->concat(manifest.length());
         response->concat("|");
         response->concat(manifest);
@@ -19,7 +20,7 @@ void handleTypeRequest(String* message, BaseDevice* device) {
     message->remove(0, 8);
 }
 
-String createManifest(String deviceName, String deviceGroup, GateValuesSet* valuesSet) {
+String createManifest(BaseDevice* device) {
     String manifest("{");
     #ifdef __AVR__
         EEPROM.begin();
@@ -54,11 +55,15 @@ String createManifest(String deviceName, String deviceGroup, GateValuesSet* valu
     }
     EEPROM.end();
 
-    manifest += "\"deviceName\":\"" + deviceName + "\"";
-    if (deviceGroup.length() > 0) {
-        manifest += ",\"group\":\"" + deviceGroup + "\"";
+    manifest += "\"deviceName\":\"" + device->deviceName + "\"";
+    if (device->groupName.length() > 0) {
+        manifest += ",\"group\":\"" + device->groupName + "\"";
+    }
+    if (device->info.length() > 0) {
+        manifest += ",\"info\":\"" + device->info + "\"";
     }
     manifest += ",\"values\":[";
+    GateValuesSet* valuesSet = device->factory.getValues();
     if (valuesSet->size() > 0) {
         for (int i = 0; i < valuesSet->size(); i++) {
             manifest += valuesSet->get(i)->toManifest() + ",";

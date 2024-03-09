@@ -21,6 +21,7 @@ class BaseDevice : public Sender
         ServerStorage serverStorage;
         String deviceName;
         String groupName;
+        String info;
         OutputBuffer outputBuffer;
 
     protected:

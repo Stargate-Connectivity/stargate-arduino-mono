@@ -18,6 +18,7 @@ class GateValue
         GateValue();
         int id;
         String valueName;
+        String info;
         int direction;
         bool subscribed;
         virtual String toString() = 0;

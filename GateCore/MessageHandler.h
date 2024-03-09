@@ -14,7 +14,7 @@ void handleIdAssigned(String* message);
 void handleServerStorageGetResponse(String* message, BaseDevice* device);
 void handleValueMessage(String* message, GateValuesSet* valuesSet);
 void setGateValue (int id, String* value, GateValuesSet* valuesSet);
-String createManifest(String deviceName, String deviceGroup, GateValuesSet* valuesSet);
+String createManifest(BaseDevice* device);
 void handleSubscription(bool subscribed, String* message, BaseDevice* device);
 void setValueSubscribed(int id, bool subscribed, BaseDevice* device);
 
